@@ -3,8 +3,10 @@ game runner
 """
 
 import sys
+from random import randint
 import pygame as pg
 from physx import *
+from game_objects import *
 
 def run_game(_width=1920, _height=1080, _fps=60):
     """
@@ -20,17 +22,35 @@ def run_game(_width=1920, _height=1080, _fps=60):
     clock = pg.time.Clock()
 
     bodies = []
-    surfaces = []
-    positions = []
 
-    # surface = pg.Surface((1, 1))
-    # surface.fill("White")
-
-    # surfaces.append(surface)
-
-    # screen.blit(surface, (990, 540))
+    click = 0
 
     while True:
+        # click += 1
+
+        # if click > 60:
+            # click = 0
+
+            # calculate the overall gravity
+            # we need to test the velocity
+            # calculate new position
+
+
+        for body in bodies:
+            for _body in bodies:
+                body.velocity = _body.position - body.position
+
+            body.velocity._x /= 10
+            body.velocity._y /= 10
+
+        for body in bodies:
+            n_position = compute_new_position(body.get_position(), body.get_velocity())
+            body.set_position(n_position)
+
+        for body in bodies:
+            body.assess_velocity()
+
+
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 pg.quit()
@@ -39,15 +59,18 @@ def run_game(_width=1920, _height=1080, _fps=60):
             if event.type == pg.MOUSEBUTTONDOWN:
                 x, y = pg.mouse.get_pos()
                 position = Vector2(x, y)
-                positions.append(position)
 
                 surface = pg.Surface((1, 1))
                 surface.fill("White")
-                surfaces.append(surface)
 
+                # body = Body(mass=4, position=position, velocity=Vector2(randint(-10, 10), randint(-20, 20)), surface=surface)
+                body = Body(mass=4, position=position, velocity=Vector2(0, 0), surface=surface)
+                bodies.append(body)
+        
+        screen.fill("Black")
 
-        for i in range(len(surfaces)):
-            screen.blit(surfaces[i], (positions[i].get_x(), positions[i].get_y()))
+        for body in bodies:
+            screen.blit(body.get_surface(), body.get_position_tuple())
 
 
         pg.display.update()

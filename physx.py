@@ -472,3 +472,20 @@ class Vector3:
 
 
 ZERO3 = Vector3(0, 0, 0)
+ZERO2 = Vector2(0, 0)
+
+"""
+Speed equations
+
+S = ut + (at^2) / 2         [1]
+v^2 = u^2 + 2 * a * S       [2]
+v = u + a * t               [3]
+"""
+
+def compute_new_position(position=Vector2(0,0), velocity=Vector2(0, 0)):
+    x = velocity.get_x()
+    y = velocity.get_y()
+
+    del_position = Vector2(x, y)
+
+    return position + del_position
