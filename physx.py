@@ -6,7 +6,7 @@ A physics library
 import pmath
 
 K_EPSILON = 0.00001
-K_EPSILON_NORMAL_SQRT = 0.000000000000001
+K_EPSILON_NORMAL_SQRT = 1E-15
 
 class Vector2:
     """
@@ -184,7 +184,7 @@ class Vector2:
 
     def clamp_magnitude(self, vector, max_lenght):
         """
-        Returns _a copy of /vector/ with its magnitude clamped to /maxLength/.
+        Returns _a copy of /vector/ with its magnitude clamped to /max_length/.
 
         These intermediate variables force the intermediate result to be of float
         precision. Without thism the intermediate result can be of higher precision,
@@ -228,7 +228,247 @@ class Vector2:
     # def cross(self, other):
     #     """
     #     :param other: Vector2 component
-    #     :return: cross product of self X other 
+    #     :return: cross product of self X other
     #     [TODO] implement
     #     """
     #     pass
+
+class Vector3:
+    """
+        undocumented
+    """
+
+    def __init__(self, _x, _y, _z=0) -> None:
+        self._x = _x
+        self._y = _y
+        self._z = _z
+
+
+    def set(self, _x, _y, _z) -> None:
+        """
+        undocumented
+        """
+
+        self._x = _x
+        self._y = _y
+        self._z = _z
+
+    def get_x(self):
+        """
+        undocumented
+        """
+
+        return self._x
+
+    def lerp(self, _a, _b, _t):
+        """
+        undocumented
+        """
+
+        _t = pmath.clamp01(_t)
+
+        return Vector3(
+            _a.get_x() + (_b.get_x() - _a.get_x()) * _t,
+            _a.get_y() + (_b.get_y() - _a.get_y()) * _t,
+            _a.get_z() + (_b.get_z() - _a.get_z()) * _t
+        )
+
+    def lerp_unclamped(self, _a, _b, _t):
+        """
+        undocumented
+        """
+
+        return Vector3(
+            _a.get_x() + (_b.get_x() - _a.get_x()) * _t,
+            _a.get_y() + (_b.get_y() - _a.get_y()) * _t,
+            _a.get_z() + (_b.get_z() - _a.get_z()) * _t
+        )
+
+    def move_towards(self, current, target, max_distance_delta):
+        """
+        undocumented
+        """
+
+        to_vector_x = target.get_x() - current.get_x()
+        to_vector_y = target.get_y() - current.get_y()
+        to_vector_z = target.get_z() - current.get_z()
+
+        sqdist = to_vector_x * to_vector_x + to_vector_y * to_vector_y + to_vector_z * to_vector_z
+
+        if sqdist == 0 or (
+            max_distance_delta >= 0 and sqdist <= max_distance_delta * max_distance_delta):
+            return target
+
+        dist = float(pmath.sqrt(sqdist))
+
+        return Vector3(
+            current.get_x() + to_vector_x / dist * max_distance_delta,
+            current.get_y() + to_vector_y / dist * max_distance_delta,
+            current.get_z() + to_vector_z / dist * max_distance_delta
+        )
+
+    def scale(self, _a, _b):
+        """
+        undocumented
+        """
+
+        return Vector3(
+            _a.get_x() * _b.get_x(),
+            _a.get_y() * _b.get_y(),
+            _a.get_z() * _b.get_z(),
+        )
+
+    def cross(self, lhs, rhs):
+        """
+        undocumented
+        """
+
+        return Vector3(
+            lhs.get_y() * rhs.get_z() - lhs.get_z() * rhs.get_y(),
+            lhs.get_z() * rhs.get_x() - lhs.get_x() * rhs.get_z(),
+            lhs.get_x() * rhs.get_y() - lhs.get_y() * rhs.get_x()
+        )
+
+    def dot(self, lhs, rhs):
+        """
+        undocumented
+        """
+
+        return lhs.get_x() * rhs.get_x() + lhs.get_y() * rhs.get_y() + lhs.get_z() * rhs.get_z()
+
+    def reflect(self, in_direction, in_normal):
+        """
+        undocumented
+        """
+
+        factor = -2.0 * self.dot(in_normal, in_direction)
+
+        return Vector3(
+            factor * in_normal.get_x() + in_direction.get_x(),
+            factor * in_normal.get_y() + in_direction.get_y(),
+            factor * in_normal.get_z() + in_direction.get_z()
+        )
+
+    def magnitude(self, vector):
+        """
+        undocumented
+        """
+
+        return pmath.sqrt(
+            vector.get_x() * vector.get_x() +
+            vector.get_y() * vector.get_y() +
+            vector.get_z() * vector.get_z())
+
+    def normalize(self, value):
+        """
+        undocumented
+        """
+
+        mag = self.magnitude(value)
+        if mag > K_EPSILON:
+            return value / mag
+        else:
+            return ZERO3
+
+
+    def project(self, vector, on_normal):
+        """
+        undocumented
+        """
+
+        sqr_mag = self.dot(on_normal, on_normal)
+        if sqr_mag < K_EPSILON:
+            return ZERO3
+        else:
+            dot = self.dot(vector, on_normal)
+            return Vector3(
+                on_normal.get_x() * dot / sqr_mag,
+                on_normal.get_y() * dot / sqr_mag,
+                on_normal.get_z() * dot / sqr_mag
+            )
+
+    def project_on_plane(self, vector, plane_normal):
+        """
+        undocumented
+        """
+
+        sqr_mag = self.dot(plane_normal, plane_normal)
+        if sqr_mag < K_EPSILON:
+            return vector
+
+        dot = self.dot(vector, plane_normal)
+        Vector3(
+            vector.get_x() - plane_normal.get_x * dot / sqr_mag,
+            vector.get_y() - plane_normal.get_y * dot / sqr_mag,
+            vector.get_z() - plane_normal.get_z * dot / sqr_mag
+        )
+
+    def angle(self, _from, _to):
+        """
+        undocumented
+        """
+
+        denominator = float(pmath.sqrt(_from.sqrMagnitude * _to.sqrMagnitude))
+        if denominator < K_EPSILON_NORMAL_SQRT:
+            return 0.0
+
+        dot = pmath.clamp(self.dot(_from, _to) / denominator, -1.0, 1.0)
+        return float(pmath.acos(dot)) * pmath.RAD_2_DEG
+
+    def singned_angle(self, _from, _to, axis):
+        """
+        undocumented
+        """
+
+        unsigned_angle = self.angle(_from, _to)
+
+        cross_x = _from.get_y() * _to.get_z() - _from.get_z() * _to.get_y()
+        cross_y = _from.get_z() * _to.get_x() - _from.get_x() * _to.get_z()
+        cross_z = _from.get_x() * _to.get_y() - _from.get_y() * _to.get_x()
+
+        sign = pmath.sign(axis.get_x() * cross_x + axis.get_y() * cross_y + axis.get_z() * cross_z)
+
+        return unsigned_angle * sign
+
+    def distance(self, _a, _b):
+        """
+        undocumented
+        """
+
+        diff_x = _a.get_x() - _b.get_x()
+        diff_y = _a.get_y() - _b.get_y()
+        diff_z = _a.get_z() - _b.get_z()
+        return float(pmath.sqrt(diff_x * diff_x + diff_y * diff_y + diff_z * diff_z))
+
+    def clamp_magnitude(self, vector, max_length):
+        """
+        undocumented
+        """
+
+        sqrmag = vector.sqrMagnitude
+
+        if sqrmag > max_length * max_length:
+            mag = float(pmath.sqrt(sqrmag))
+
+            normalized_x = vector.get_x() / mag
+            normalized_y = vector.get_y() / mag
+            normalized_z = vector.get_z() / mag
+
+            return Vector3(
+                normalized_x * max_length,
+                normalized_y * max_length,
+                normalized_z * max_length
+            )
+
+        return vector
+
+
+    def smooth_damp(self):
+        """
+        undocumented
+        """
+        print("none")
+
+
+
+ZERO3 = Vector3(0, 0, 0)
